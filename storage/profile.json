@@ -1,0 +1,272 @@
+{
+  "users": {
+    "7378055425": {
+      "telegram_id": 7378055425,
+      "sid": 1,
+      "level": 1,
+      "souls": 9593,
+      "exp": 12694,
+      "trophy_souls": 10516,
+      "trophies": 9999,
+      "chests": {
+        "weak_soul": 9996,
+        "time": 9998,
+        "death": 9999,
+        "infinity": 0
+      },
+      "active_char": "Ayanokoji_Kiyotaka",
+      "last_up": "2026-01-27T13:12:57.344549",
+      "up_count": 6,
+      "skill_slots": {
+        "Yuichi_Katagiri": {
+          "1": 6,
+          "2": 2,
+          "3": 5,
+          "4": 3
+        },
+        "Ayanokoji_Kiyotaka": {
+          "1": 0,
+          "2": 6
+        }
+      },
+      "username": "Ev4rnight",
+      "first_name": "𝐓𝐡𝖊 𝚆𝚘𝚛l𝐝",
+      "avatar": {
+        "type": "photo",
+        "file_id": "AgACAgQAAyEFAATFunVHAAKebGl4mffYDtTfo8aqXYOdZhd3_cvlAAIzFmsbbpnIU0MBv1MYvrYwAQADAgADeQADOAQ"
+      }
+    },
+    "6170511217": {
+      "telegram_id": 6170511217,
+      "sid": 2,
+      "level": 1,
+      "souls": 0,
+      "exp": 14,
+      "trophy_souls": 18,
+      "trophies": 0,
+      "chests": {
+        "weak_soul": 0,
+        "time": 0,
+        "death": 0,
+        "infinity": 0
+      },
+      "active_char": null,
+      "last_up": "2026-01-25T13:10:22.680762",
+      "up_count": 1,
+      "skill_slots": {}
+    },
+    "8379137514": {
+      "telegram_id": 8379137514,
+      "sid": 3,
+      "level": 1,
+      "souls": 0,
+      "exp": 0,
+      "trophy_souls": 0,
+      "trophies": 0,
+      "chests": {
+        "weak_soul": 0,
+        "time": 0,
+        "death": 0,
+        "infinity": 0
+      },
+      "active_char": null,
+      "last_up": null,
+      "up_count": 0,
+      "skill_slots": {}
+    },
+    "5035106867": {
+      "telegram_id": 5035106867,
+      "sid": 4,
+      "level": 1,
+      "souls": 0,
+      "exp": 72,
+      "trophy_souls": 24,
+      "trophies": 0,
+      "chests": {
+        "weak_soul": 0,
+        "time": 1,
+        "death": 0,
+        "infinity": 0
+      },
+      "active_char": null,
+      "last_up": "2026-01-27T13:17:10.662231",
+      "up_count": 1,
+      "skill_slots": {},
+      "username": "Fah0tik",
+      "first_name": "ꜰᴀʜᴏᴛɪᴋ"
+    },
+    "8463189687": {
+      "telegram_id": 8463189687,
+      "sid": 5,
+      "level": 1,
+      "souls": 0,
+      "exp": 8,
+      "trophy_souls": 14,
+      "trophies": 0,
+      "chests": {
+        "weak_soul": 1,
+        "time": 0,
+        "death": 0,
+        "infinity": 0
+      },
+      "active_char": "Ayanokoji_Kiyotaka",
+      "last_up": "2026-01-25T13:44:26.492021",
+      "up_count": 1,
+      "skill_slots": {
+        "Ayanokoji_Kiyotaka": {
+          "1": 6,
+          "2": 8,
+          "3": 5
+        }
+      }
+    },
+    "6313176310": {
+      "telegram_id": 6313176310,
+      "sid": 6,
+      "level": 1,
+      "souls": 336,
+      "exp": 325,
+      "trophy_souls": 93,
+      "trophies": 0,
+      "chests": {
+        "weak_soul": 0,
+        "time": 0,
+        "death": 0,
+        "infinity": 0
+      },
+      "active_char": null,
+      "last_up": "2026-01-25T14:38:38.080175",
+      "up_count": 1,
+      "skill_slots": {}
+    },
+    "7542222243": {
+      "telegram_id": 7542222243,
+      "sid": 7,
+      "level": 1,
+      "souls": 0,
+      "exp": 0,
+      "trophy_souls": 0,
+      "trophies": 0,
+      "chests": {
+        "weak_soul": 0,
+        "time": 0,
+        "death": 0,
+        "infinity": 0
+      },
+      "active_char": null,
+      "last_up": null,
+      "up_count": 0,
+      "skill_slots": {}
+    },
+    "1887872942": {
+      "telegram_id": 1887872942,
+      "sid": 8,
+      "level": 1,
+      "souls": 663792,
+      "exp": 619941,
+      "trophy_souls": 35554,
+      "trophies": 0,
+      "chests": {
+        "weak_soul": 1,
+        "time": 0,
+        "death": 0,
+        "infinity": 0
+      },
+      "active_char": "Yuichi_Katagiri",
+      "last_up": "2026-01-27T12:55:57.842179",
+      "up_count": 3,
+      "skill_slots": {
+        "Yuichi_Katagiri": {
+          "1": 5
+        }
+      },
+      "avatar": {
+        "type": "photo",
+        "file_id": "AgACAgIAAyEFAATFunVHAAKexml4nLeaPz-Cb5L_-bVMTzpmRZTRAAIcDGsboP15SzOtX2DYj9lVAQADAgADbQADOAQ"
+      }
+    },
+    "1077161334": {
+      "telegram_id": 1077161334,
+      "sid": 9,
+      "level": 1,
+      "souls": 0,
+      "exp": 17,
+      "trophy_souls": 8,
+      "trophies": 0,
+      "chests": {
+        "weak_soul": 0,
+        "time": 1,
+        "death": 0,
+        "infinity": 0
+      },
+      "active_char": null,
+      "last_up": "2026-01-25T14:41:06.924030",
+      "up_count": 1,
+      "skill_slots": {}
+    },
+    "6403893359": {
+      "telegram_id": 6403893359,
+      "sid": 10,
+      "level": 1,
+      "souls": 0,
+      "exp": 3,
+      "trophy_souls": 23,
+      "trophies": 0,
+      "chests": {
+        "weak_soul": 1,
+        "time": 0,
+        "death": 0,
+        "infinity": 0
+      },
+      "active_char": null,
+      "last_up": "2026-01-25T14:43:38.952908",
+      "up_count": 1,
+      "skill_slots": {}
+    },
+    "8226550622": {
+      "telegram_id": 8226550622,
+      "sid": 11,
+      "level": 1,
+      "souls": 126,
+      "exp": 19,
+      "trophy_souls": 14,
+      "trophies": 0,
+      "chests": {
+        "weak_soul": 0,
+        "time": 0,
+        "death": 0,
+        "infinity": 0
+      },
+      "active_char": null,
+      "last_up": "2026-01-25T18:56:57.540526",
+      "up_count": 1,
+      "skill_slots": {}
+    },
+    "5758566570": {
+      "telegram_id": 5758566570,
+      "sid": 12,
+      "level": 1,
+      "souls": 262,
+      "exp": 342,
+      "trophy_souls": 102,
+      "trophies": 0,
+      "chests": {
+        "weak_soul": 0,
+        "time": 0,
+        "death": 0,
+        "infinity": 0
+      },
+      "active_char": null,
+      "last_up": "2026-01-27T13:25:30.376889",
+      "up_count": 2,
+      "skill_slots": {},
+      "avatar": {
+        "type": "photo",
+        "file_id": "AgACAgIAAyEFAATFunVHAAKefGl4mi9h39k1AAE8_3bjG9wSFK7t0AAC1hJrGzkswEsLQBrWLXoAAUUBAAMCAAN5AAM4BA"
+      },
+      "username": null,
+      "first_name": "Евгений"
+    }
+  },
+  "next_sid": 13
+}
