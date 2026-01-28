@@ -4,7 +4,8 @@ Contains /char, /skill commands and character management
 """
 from aiogram import Router, F
 from aiogram.filters import Command
-from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton, FSInputFile, InputMediaPhoto
+from aiogram.enums import ContentType
 
 from storage import (
     get_user, save_user, get_user_characters, get_user_character,
@@ -96,8 +97,14 @@ async def show_char_list(message: Message, user_id: int, page: int, edit: bool =
     
     keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
     
+    keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
+    
     if edit:
-        await message.edit_text(text, reply_markup=keyboard)
+        if message.content_type == ContentType.TEXT:
+            await message.edit_text(text, reply_markup=keyboard)
+        else:
+            await message.delete()
+            await message.answer(text, reply_markup=keyboard)
     else:
         await message.answer(text, reply_markup=keyboard)
 
@@ -135,11 +142,11 @@ async def callback_char_select(callback: CallbackQuery):
         return
     
     char_data = chars[char_idx]
-    await show_char_info(callback.message, user_id, char_data['char_id'], page)
+    await show_char_info(callback.message, user_id, char_data['char_id'], page, idx)
     await callback.answer()
 
 
-async def show_char_info(message: Message, user_id: int, char_id: str, page: int = 0):
+async def show_char_info(message: Message, user_id: int, char_id: str, page: int = 0, idx: int = 0):
     char = get_character(char_id)
     user_char = get_user_character(user_id, char_id)
     
@@ -186,16 +193,31 @@ async def show_char_info(message: Message, user_id: int, char_id: str, page: int
         buttons.append(row)
     
     buttons.append([
-        InlineKeyboardButton(text="📊 Уровень", callback_data=make_callback("charlvl", user_id, char_id)),
+        InlineKeyboardButton(text="📊 Уровень", callback_data=make_callback("charlvl", user_id, f"{char_id}_{page}_{idx}")),
         InlineKeyboardButton(text="🟢 Выбрать", callback_data=make_callback("charuse", user_id, char_id))
     ])
     buttons.append([
-        InlineKeyboardButton(text="Выбрать способности", callback_data=make_callback("charskill", user_id, char_id)),
+        InlineKeyboardButton(text="Выбрать способности", callback_data=make_callback("charskill", user_id, f"{char_id}_{page}_{idx}")),
         InlineKeyboardButton(text="🔙 Назад", callback_data=make_callback("charpage", user_id, str(page)))
     ])
     
     keyboard = InlineKeyboardMarkup(inline_keyboard=buttons)
-    await message.edit_text(text, reply_markup=keyboard)
+    
+    # Check for character specific image (Saber)
+    if char_id == "Saber":
+        photo = FSInputFile("media/saber/saber.jpg")
+        if message.content_type == ContentType.PHOTO:
+             await message.edit_media(media=InputMediaPhoto(media=photo, caption=text), reply_markup=keyboard)
+        else:
+             await message.delete()
+             await message.answer_photo(photo, caption=text, reply_markup=keyboard)
+    else:
+        # Standard text display
+        if message.content_type == ContentType.TEXT:
+            await message.edit_text(text, reply_markup=keyboard)
+        else:
+            await message.delete()
+            await message.answer(text, reply_markup=keyboard)
 
 
 @router.callback_query(F.data.startswith("abilinfo:"))
@@ -244,12 +266,18 @@ async def callback_char_use(callback: CallbackQuery):
 async def callback_char_level(callback: CallbackQuery):
     if not await check_user_callback(callback):
         return
-    _, user_id, char_id = parse_callback(callback.data)
-    await show_char_level(callback.message, user_id, char_id)
+    _, user_id, data = parse_callback(callback.data)
+    # data format: char_id_page_idx
+    parts = data.split("_")
+    char_id = parts[0]
+    page = int(parts[1]) if len(parts) > 1 else 0
+    idx = int(parts[2]) if len(parts) > 2 else 0
+    
+    await show_char_level(callback.message, user_id, char_id, page, idx)
     await callback.answer()
 
 
-async def show_char_level(message: Message, user_id: int, char_id: str):
+async def show_char_level(message: Message, user_id: int, char_id: str, page: int = 0, idx: int = 0):
     char = get_character(char_id)
     user_char = get_user_character(user_id, char_id)
     
@@ -267,7 +295,7 @@ async def show_char_level(message: Message, user_id: int, char_id: str):
 
 <i>🟢 Максимальный уровень достигнут!</i>"""
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="🔙 Назад", callback_data=make_callback("charsel", user_id, f"0_0"))]
+            [InlineKeyboardButton(text="🔙 Назад", callback_data=make_callback("charsel", user_id, f"{page}_{idx}"))]
         ])
     else:
         souls_req, trophy_souls_req, trophies_req = get_upgrade_requirements(next_level)
@@ -283,19 +311,27 @@ async def show_char_level(message: Message, user_id: int, char_id: str):
         
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
             [
-                InlineKeyboardButton(text="🆙 Улучшить", callback_data=make_callback("charupg", user_id, char_id)),
-                InlineKeyboardButton(text="🔙 Назад", callback_data=make_callback("charsel", user_id, "0_0"))
+                InlineKeyboardButton(text="🆙 Улучшить", callback_data=make_callback("charupg", user_id, f"{char_id}_{page}_{idx}")),
+                InlineKeyboardButton(text="🔙 Назад", callback_data=make_callback("charsel", user_id, f"{page}_{idx}"))
             ]
         ])
     
-    await message.edit_text(text, reply_markup=keyboard)
+    if message.content_type == ContentType.TEXT:
+        await message.edit_text(text, reply_markup=keyboard)
+    else:
+        await message.delete()
+        await message.answer(text, reply_markup=keyboard)
 
 
 @router.callback_query(F.data.startswith("charupg:"))
 async def callback_char_upgrade(callback: CallbackQuery):
     if not await check_user_callback(callback):
         return
-    _, user_id, char_id = parse_callback(callback.data)
+    _, user_id, data = parse_callback(callback.data)
+    parts = data.split("_")
+    char_id = parts[0]
+    page = int(parts[1]) if len(parts) > 1 else 0
+    idx = int(parts[2]) if len(parts) > 2 else 0
     
     user = get_user(user_id)
     user_char = get_user_character(user_id, char_id)
@@ -318,9 +354,13 @@ async def callback_char_upgrade(callback: CallbackQuery):
     if user['souls'] < souls_req or user['trophy_souls'] < trophy_souls_req or user['trophies'] < trophies_req:
         text = "🔴 <i>Вам не хватает материалов для улучшения</i>"
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="🔙 Назад", callback_data=make_callback("charlvl", user_id, char_id))]
+            [InlineKeyboardButton(text="🔙 Назад", callback_data=make_callback("charlvl", user_id, f"{char_id}_{page}_{idx}"))]
         ])
-        await callback.message.edit_text(text, reply_markup=keyboard)
+        if callback.message.content_type == ContentType.TEXT:
+            await callback.message.edit_text(text, reply_markup=keyboard)
+        else:
+            await callback.message.delete()
+            await callback.message.answer(text, reply_markup=keyboard)
         await callback.answer()
         return
     
@@ -328,11 +368,15 @@ async def callback_char_upgrade(callback: CallbackQuery):
     text = "<i>‼️ Вы действительно хотите улучшить персонажа? Все его характеристики увеличатся и у вас снимут души</i>"
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
         [
-            InlineKeyboardButton(text="🟢 Продолжить", callback_data=make_callback("charupgok", user_id, char_id)),
-            InlineKeyboardButton(text="🔴 Отменить", callback_data=make_callback("charlvl", user_id, char_id))
+            InlineKeyboardButton(text="🟢 Продолжить", callback_data=make_callback("charupgok", user_id, f"{char_id}_{page}_{idx}")),
+            InlineKeyboardButton(text="🔴 Отменить", callback_data=make_callback("charlvl", user_id, f"{char_id}_{page}_{idx}"))
         ]
     ])
-    await callback.message.edit_text(text, reply_markup=keyboard)
+    if callback.message.content_type == ContentType.TEXT:
+        await callback.message.edit_text(text, reply_markup=keyboard)
+    else:
+        await callback.message.delete()
+        await callback.message.answer(text, reply_markup=keyboard)
     await callback.answer()
 
 
@@ -340,7 +384,11 @@ async def callback_char_upgrade(callback: CallbackQuery):
 async def callback_char_upgrade_confirm(callback: CallbackQuery):
     if not await check_user_callback(callback):
         return
-    _, user_id, char_id = parse_callback(callback.data)
+    _, user_id, data = parse_callback(callback.data)
+    parts = data.split("_")
+    char_id = parts[0]
+    page = int(parts[1]) if len(parts) > 1 else 0
+    idx = int(parts[2]) if len(parts) > 2 else 0
     
     user = get_user(user_id)
     user_char = get_user_character(user_id, char_id)
@@ -361,19 +409,25 @@ async def callback_char_upgrade_confirm(callback: CallbackQuery):
     update_user_character(user_id, char_id, {'level': next_level})
     
     await callback.answer(f"🟢 Персонаж улучшен до уровня {next_level}!", show_alert=True)
-    await show_char_level(callback.message, user_id, char_id)
+    await callback.answer(f"🟢 Персонаж улучшен до уровня {next_level}!", show_alert=True)
+    await show_char_level(callback.message, user_id, char_id, page, idx)
 
 
 @router.callback_query(F.data.startswith("charskill:"))
 async def callback_char_skills(callback: CallbackQuery):
     if not await check_user_callback(callback):
         return
-    _, user_id, char_id = parse_callback(callback.data)
-    await show_skill_selection(callback.message, user_id, char_id)
+    _, user_id, data = parse_callback(callback.data)
+    parts = data.split("_")
+    char_id = parts[0]
+    page = int(parts[1]) if len(parts) > 1 else 0
+    idx = int(parts[2]) if len(parts) > 2 else 0
+    
+    await show_skill_selection(callback.message, user_id, char_id, page, idx)
     await callback.answer()
 
 
-async def show_skill_selection(message: Message, user_id: int, char_id: str):
+async def show_skill_selection(message: Message, user_id: int, char_id: str, page: int = 0, idx: int = 0):
     char = get_character(char_id)
     if not char:
         return
@@ -389,10 +443,14 @@ async def show_skill_selection(message: Message, user_id: int, char_id: str):
 для того чтобы выбрать способность напишите команду <code>/skill {char_id} (номер слота) (номер способности)</code>"""
     
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🔙 Назад", callback_data=make_callback("charsel", user_id, "0_0"))]
+        [InlineKeyboardButton(text="🔙 Назад", callback_data=make_callback("charsel", user_id, f"{page}_{idx}"))]
     ])
     
-    await message.edit_text(text, reply_markup=keyboard)
+    if message.content_type == ContentType.TEXT:
+        await message.edit_text(text, reply_markup=keyboard)
+    else:
+        await message.delete()
+        await message.answer(text, reply_markup=keyboard)
 
 
 # ==================== /skill ====================
