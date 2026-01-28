@@ -449,6 +449,25 @@ async def cmd_so(message: Message):
 
 
 # ==================== /chests ====================
+
+def get_chests_keyboard(user_id: int, with_back: bool = False) -> InlineKeyboardMarkup:
+    buttons = [
+        [
+            InlineKeyboardButton(text="💼Слабой души", callback_data=make_callback("chest", user_id, "weak_soul")),
+            InlineKeyboardButton(text="🕦Времени", callback_data=make_callback("chest", user_id, "time"))
+        ],
+        [
+            InlineKeyboardButton(text="☠Смерти", callback_data=make_callback("chest", user_id, "death")),
+            InlineKeyboardButton(text="🌌Бесконечности", callback_data=make_callback("chest", user_id, "infinity"))
+        ]
+    ]
+    
+    if with_back:
+        buttons.append([InlineKeyboardButton(text="🔙 Назад", callback_data=make_callback("chests_menu", user_id))])
+        
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
 @router.message(Command("chests"))
 async def cmd_chests(message: Message):
     user = get_user(message.from_user.id)
@@ -458,20 +477,35 @@ async def cmd_chests(message: Message):
   ⤷🕦 Сундук времени ›› {user['chests'].get('time', 0)}
   ⤷☠ Сундук смерти ›› {user['chests'].get('death', 0)}
   ⤷🌌 Сундук бесконечности ›› {user['chests'].get('infinity', 0)}</i></blockquote>
+<i>Для быстрого открытия сундука используйте команды:</i>
+<code>💼/open_s</code>, <code>🕦/open_t</code>, <code>☠/open_d</code>, <code>🌌/open_i</code>"""
+    
+    await message.answer(text, reply_markup=get_chests_keyboard(message.from_user.id))
+
+
+@router.callback_query(F.data.startswith("chests_menu:"))
+async def callback_chests_menu(callback: CallbackQuery):
+    if not await check_user_callback(callback):
+        return
+        
+    user = get_user(callback.from_user.id)
+    
+    text = f"""<blockquote><i>Сундуки
+  ⤷💼 Сундук слабой души ›› {user['chests'].get('weak_soul', 0)}
+  ⤷🕦 Сундук времени ›› {user['chests'].get('time', 0)}
+  ⤷☠ Сундук смерти ›› {user['chests'].get('death', 0)}
+  ⤷🌌 Сундук бесконечности ›› {user['chests'].get('infinity', 0)}</i></blockquote>
   Для быстрого открытия сундука используйте команды <code>💼/open_s</code>, <code>🕦/open_t</code>, <code>☠/open_d</code>, <code>🌌/open_i</code>"""
     
-    keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [
-            InlineKeyboardButton(text="💼Слабой души", callback_data=make_callback("chest", message.from_user.id, "weak_soul")),
-            InlineKeyboardButton(text="🕦Времени", callback_data=make_callback("chest", message.from_user.id, "time"))
-        ],
-        [
-            InlineKeyboardButton(text="☠Смерти", callback_data=make_callback("chest", message.from_user.id, "death")),
-            InlineKeyboardButton(text="🌌Бесконечности", callback_data=make_callback("chest", message.from_user.id, "infinity"))
-        ]
-    ])
-    
-    await message.answer(text, reply_markup=keyboard)
+    # Check if message type is appropriate for edit_text
+    if callback.message.content_type == ContentType.TEXT:
+        await callback.message.edit_text(text, reply_markup=get_chests_keyboard(callback.from_user.id))
+    else:
+        # If for some reason it's not text (unlikely for chests, but safe to handle)
+        await callback.message.delete()
+        await callback.message.answer(text, reply_markup=get_chests_keyboard(callback.from_user.id))
+        
+    await callback.answer()
 
 
 @router.callback_query(F.data.startswith("chest:"))
@@ -494,7 +528,8 @@ async def callback_open_chest(callback: CallbackQuery):
     if result_text.startswith("🔴"):
         await callback.answer(result_text, show_alert=True)
     else:
-        await callback.message.edit_text(result_text)
+        # Success: Show results + buttons + back button
+        await callback.message.edit_text(result_text, reply_markup=get_chests_keyboard(user_id, with_back=True))
         await callback.answer()
 
 
