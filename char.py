@@ -67,7 +67,8 @@ def create_ability(
     energy_restore: int = 0,
     effect_type: str = EFFECT_DAMAGE,
     effect_value: int = 0,
-    effect_percent: int = 0  # For percentage-based effects
+    effect_percent: int = 0,  # For percentage-based effects
+    gif: str = None  # Path to GIF file
 ) -> Dict[str, Any]:
     """Create an ability definition"""
     return {
@@ -78,7 +79,8 @@ def create_ability(
         "energy_restore": energy_restore,
         "effect_type": effect_type,
         "effect_value": effect_value,
-        "effect_percent": effect_percent
+        "effect_percent": effect_percent,
+        "gif": gif
     }
 
 
@@ -249,6 +251,29 @@ CHARACTERS: Dict[str, Dict[str, Any]] = {
                 energy_cost=2,
                 effect_type=EFFECT_DAMAGE,
                 effect_value=130
+            )
+        ]
+    },
+    
+    "Saber": {
+        "name_ru": "Сэйбер",
+        "name_en": "Saber",
+        "anime": "Fate/Stay Night",
+        "rarity": RARITY_PLANET,
+        "base_hp": 8500,
+        "base_damage": [700, 1000],
+        "base_defense": 500,
+        "base_crit": 15,
+        "abilities": [
+            create_ability(
+                name="Удар",
+                description="Сэйбер наносит быстрый удар мечом. Урон: 700-1000",
+                weight=1,
+                energy_cost=0,
+                energy_restore=3,
+                effect_type=EFFECT_DAMAGE,
+                effect_value=850,  # Average of 700-1000 for calculation base
+                gif="gifs/saber/attack.gif"
             )
         ]
     }
