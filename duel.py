@@ -9,7 +9,8 @@ from datetime import datetime, timedelta
 
 from aiogram import Router, F, Bot
 from aiogram.filters import Command
-from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton, FSInputFile, InputMediaAnimation
+from aiogram.enums import ContentType
 
 from storage import (
     get_user, save_user, get_user_characters, get_user_character,
@@ -120,7 +121,7 @@ def get_duel_message(duel: dict, user_id: int = None, bot_instance: Bot = None) 
 |——————|</b></blockquote>
 
 <blockquote><b>Игрок 1
-
+🟢 Активный персонаж ›› {char1['name_ru']}
 ❤️ Здоровье ›› {user1_hp}{user1_dmg_str}
 ⚡️ Энергия ›› {user1_energy}/10{user1_eng_str}
 
@@ -128,6 +129,7 @@ def get_duel_message(duel: dict, user_id: int = None, bot_instance: Bot = None) 
 {user1_abilities_text}</b></blockquote>
 
 <blockquote><i>Игрок 2
+🟢 Активный персонаж ›› {char2['name_ru']}
 ❤️ Здоровье ›› {user2_hp}{user2_dmg_str}
 ⚡️ Энергия ›› {user2_energy}/10{user2_eng_str}
 
@@ -195,7 +197,7 @@ def get_duel_message(duel: dict, user_id: int = None, bot_instance: Bot = None) 
 |——————|</b></blockquote>
 
 <blockquote><b>Вы
-
+🟢 Активный персонаж ›› {my_char['name_ru']}
 ❤️ Здоровье ›› {my_hp}{my_dmg_str}
 ⚡️ Энергия ›› {my_energy}/10{my_eng_str}
 
@@ -203,6 +205,7 @@ def get_duel_message(duel: dict, user_id: int = None, bot_instance: Bot = None) 
 {my_abilities_text}</b></blockquote>
 
 <blockquote><i>Ваш противник
+🟢 Активный персонаж ›› {opp_char['name_ru']}
 ❤️ Здоровье ›› {opp_hp}{opp_dmg_str}
 ⚡️ Энергия ›› {opp_energy}/10{opp_eng_str}
 
@@ -283,6 +286,44 @@ def get_duel_keyboard(duel: dict, user_id: int = None) -> InlineKeyboardMarkup:
         buttons.append(row)
     
     return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+async def update_duel_interface(callback: CallbackQuery, text: str, keyboard: InlineKeyboardMarkup, gif_path: str = None):
+    """Helper to handle Text <-> Animation transitions in duel interface"""
+    try:
+        # Determine if we need to show animation or text
+        if gif_path:
+             # We want to show Animation
+             media = InputMediaAnimation(media=FSInputFile(gif_path), caption=text)
+             
+             if callback.message.content_type == ContentType.ANIMATION:
+                 # Animation -> Animation: Edit media
+                 await callback.message.edit_media(media=media, reply_markup=keyboard)
+             else:
+                 # Text/Photo/Video -> Animation: Delete and Send
+                 # (Photo/Video -> Animation *might* work with edit_media but Delete/Send is safer for aspect ratios etc)
+                 # Actually edit_media works fine between visual types usually, but let's be safe if coming from Text
+                 if callback.message.content_type in [ContentType.PHOTO, ContentType.VIDEO]:
+                      await callback.message.edit_media(media=media, reply_markup=keyboard)
+                 else:
+                      await callback.message.delete()
+                      await callback.message.answer_animation(animation=FSInputFile(gif_path), caption=text, reply_markup=keyboard)
+        else:
+             # We want to show Text
+             if callback.message.content_type == ContentType.TEXT:
+                 # Text -> Text: Edit text
+                 await callback.message.edit_text(text, reply_markup=keyboard)
+             else:
+                 # Animation/Photo/Video -> Text: Delete and Send
+                 await callback.message.delete()
+                 await callback.message.answer(text, reply_markup=keyboard)
+                 
+    except Exception as e:
+        print(f"Error updating duel interface: {e}")
+        # Fallback to simple answer if something breaks
+        try:
+            await callback.message.answer(text, reply_markup=keyboard)
+        except:
+            pass
 
 
 # ==================== /duels ====================
@@ -442,6 +483,8 @@ async def callback_duel_accept(callback: CallbackQuery):
     duel['user2_buffs'] = {'attack': 0, 'defense': 0}
     duel['status'] = 'active'
     duel['current_turn'] = duel['user1_id']  # User1 goes first
+    duel['user1_level'] = user1_char.get('level', 1)
+    duel['user2_level'] = user2_char.get('level', 1)
     
     # Show duel interface
     text = get_duel_message(duel, callback.from_user.id)
@@ -537,6 +580,13 @@ async def callback_duel_action(callback: CallbackQuery):
     
     if effect_type == EFFECT_DAMAGE:
         base_dmg = ability['effect_value']
+        
+        # Apply level scaling
+        my_level_key = 'user1_level' if is_user1 else 'user2_level'
+        level = duel.get(my_level_key, 1)
+        for _ in range(1, level):
+            base_dmg = int(base_dmg / 0.9)
+            
         attack_buff = duel[my_buffs_key]['attack']
         defense_debuff = duel[opp_buffs_key]['defense']
         opp_defense = duel[opp_stats_key]['defense']
@@ -611,7 +661,9 @@ async def callback_duel_action(callback: CallbackQuery):
     text = get_duel_message(duel, user_id)
     keyboard = get_duel_keyboard(duel, user_id)
     
-    await callback.message.edit_text(text, reply_markup=keyboard)
+    gif_path = ability.get('gif')
+    await update_duel_interface(callback, text, keyboard, gif_path)
+    
     await callback.answer(f"✨ {ability['name']}")
 
 
@@ -725,6 +777,8 @@ async def callback_friend_accept(callback: CallbackQuery):
     duel['user2_buffs'] = {'attack': 0, 'defense': 0}
     duel['status'] = 'active'
     duel['current_turn'] = challenger_id
+    duel['user1_level'] = user1_char.get('level', 1)
+    duel['user2_level'] = user2_char.get('level', 1)
     duel['message'] = callback.message
     
     text = get_duel_message(duel, target_id)
@@ -866,7 +920,9 @@ async def callback_friendly_duel_action(callback: CallbackQuery):
     text = get_duel_message(duel, None)  # Pass None for friendly duels
     keyboard = get_duel_keyboard(duel, None)
     
-    await callback.message.edit_text(text, reply_markup=keyboard)
+    gif_path = ability.get('gif')
+    await update_duel_interface(callback, text, keyboard, gif_path)
+    
     await callback.answer(f"✨ {ability['name']}")
 
 
