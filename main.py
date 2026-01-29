@@ -8,6 +8,7 @@ import random
 from datetime import datetime, timedelta
 from typing import Optional
 
+from aiohttp import web
 from aiogram import Bot, Dispatcher, F, Router
 from aiogram.filters import Command, CommandStart
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
@@ -678,10 +679,36 @@ async def setup_bot_commands(bot: Bot):
     await bot.set_my_commands(commands)
 
 
+async def health_check(request):
+    """Health check endpoint for keeping the bot alive"""
+    return web.Response(text="Bot is alive!")
+
+
 async def main():
     print("Bot starting...")
     await setup_bot_commands(bot)
-    await dp.start_polling(bot)
+    
+    # Создаем веб-сервер для keep-alive
+    app = web.Application()
+    app.router.add_get('/health', health_check)
+    app.router.add_get('/', health_check)  # Also respond to root
+    
+    runner = web.AppRunner(app)
+    await runner.setup()
+    
+    # Получаем порт из переменной окружения (для Railway/Render)
+    port = int(os.getenv('PORT', 8000))
+    site = web.TCPSite(runner, host='0.0.0.0', port=port)
+    await site.start()
+    
+    print(f"Web server started on port {port}")
+    print("Bot and web server started successfully!")
+    
+    # Запускаем бота в фоне
+    asyncio.create_task(dp.start_polling(bot))
+    
+    # Ждем бесконечно
+    await asyncio.Event().wait()
 
 
 if __name__ == "__main__":
